@@ -1,75 +1,77 @@
+var _ = require('underscore'),
+		fs = require('fs'),
+		Play = require('./lib/model/play'),
+		Writer = require('./lib/writer'),
+		Critic = require('./lib/critic');
+		
+var firstTime = true,
+		play_count = 1,
+		plays_completed = 0;
 
-var Writer = require('./lib/writer'),
-	  actor = require('./lib/actor.js'),
-		_ = require('underscore');
-
-var writer = new Writer(),
-		startup = true,
-		complete = false,
-		counter = 0,
-		plays = writer.getPlays();
-
-var main = setInterval(function(){
-	if(startup){
-		startup = false;
-				
-		_.forEach(plays, function(play){
-			console.log('Rehearsing a new play called: ' + play.description);
-			var act_counter = 1;
+// Wait for all of the plays to complete!
+var waitUntilDone = setInterval(function(){
+	
+	if(firstTime){
+		// Clear out the old temp directory
+		deleteFolderRecursive('./tmp', function(){
+			// Load plays
+			Play.findAll( {where: {active: true}} ).success(function(plays){
+		
+				plays_count = plays.length;
+		
+				_.forEach(plays, function(play){
+					console.log('\nPLAY: ' + play.description);
 			
-			_.forEach(play.getActs(), function(act){
-				console.log('\n.. ---------------------------------------------------------');
-				console.log('.. ACT ' + act_counter + ': ' + act.title);
-				var scene_counter = 1;
+					// Assign a Playwright
+					var writer = new Writer();
+			
+					// Rehearse the play to make sure all Actor's know their lines
+					play.rehearse(writer, function(){
 				
-				if(act.getScenes().length > 0){
+						// Assign a Critic to review the play
+						var critic = new Critic();
+				
+						// Perform Full Dress Rehearsal for the Critic
+						play.perform(critic, function(){
 					
-					_.forEach(act.getScenes(), function(scene){
-						console.log('\n.... SCENE ' + scene_counter + ':');
-						
-						if(scene.antagonist.readLine() == null){
-							console.log('...... ' + scene.antagonist.getName() + ' has no opening line!');
-						
-						}else{
-							if(scene.protagonist.readLine() == null){
-								console.log('...... ' + scene.protagonist.getName() + ' has forgetten its line and will be using a cue card!');
-								
-							}
-							
-							if(scene.tritagonist.respond() == null){
-								console.log('...... ' + scene.tritagonist.getName() + ' has forgetten its response and will be using a cue card!');
-							}
-						
-							console.log('...... ' + scene.antagonist.getName() + ' to ' + scene.protagonist.getName() + ': ' + scene.antagonist.readLine());
-							console.log('\n...... ' + scene.protagonist.getName() + ' to ' + scene.tritagonist.getName() + ': ' + scene.protagonist.readLine());
-							console.log('\n...... ' + scene.tritagonist.getName() + ' to ' + scene.protagonist.getName() + ': ' + scene.tritagonist.respond());
-							console.log('\n...... ' + scene.protagonist.getName() + ' to ' + scene.antagonist.getName() + ': ' + scene.protagonist.respond());
-						
-							// Compare 
-						}
-						
-						scene_counter++;
+							plays_completed++;
+						});
+			
 					});
-					
-				}else{
-					console.log('.... SCENE ' + scene_counter + ': is unfinished. No actors have been cast!');
-				}
-				
-				act_counter++;
+			
+				});
+			
+			}).error(function(err){
+				console.log('Unable to see the play schedule!');
+				console.log(err);
 			});
+		
+			firstTime = false;
 			
-/*			actor.listen(3101, function(){
-			  console.log('... The SFX actor has entered stage right.');
-			});*/
-			
-			counter ++;
 		});
 		
-	}else if(counter >= plays.length){
-		clearInterval(main);
-		writer.retire();
 	}
-	
+
+
+	if(plays_completed >= play_count) clearInterval(waitUntilDone);
 }, 1000);
 
 
+var deleteFolderRecursive = function(path, callback) {
+	if(fs.existsSync(path)){
+		
+		fs.readdirSync(path).forEach(function(file,index){
+			var curPath = path + "/" + file;
+			
+			if(fs.lstatSync(curPath).isDirectory()) { // recurse
+				deleteFolderRecursive(curPath, function(){});
+				
+			}else{ // delete file
+				fs.unlinkSync(curPath);
+			}
+		});
+
+		fs.rmdirSync(path);
+		callback();
+	}
+};
