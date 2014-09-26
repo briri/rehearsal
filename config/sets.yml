@@ -1,0 +1,46 @@
+environment_specific_configuration:
+  cdl-cedilla:
+    repository_uri: 'https://github.com/cdlib/cdl-cedilla.git'
+    retrieval_command: 'git clone'
+
+sets:
+  cedilla:
+    repository_uri: 'https://github.com/cdlib/cedilla.git'
+    retrieval_command: 'git clone'
+    build_command: 'npm install'  
+    start_command: 'nohup node cedilla.js > output.log &'
+  
+    pid_location: 'cedilla.pid'
+
+    live_target: 'http://localhost:3005'
+    mock_target: 'http://localhost:9005'
+  
+    # List all of the configuration file locations (relative to the project root) 
+    # Rehearsal will swap out all live_targets in the config files with mock_targets
+    # All other http targets will be change to point to the test proxy
+    config_location: '/config'
+    config_replacement: [{dir: '.', 
+                          files: ['cdl-cedilla/cedilla/DEV/config/application.yaml',
+                                  'cdl-cedilla/cedilla/DEV/config/rules.yaml',
+                                  'cdl-cedilla/cedilla/DEV/config/services.yaml']},
+                         {dir: './notifiers', 
+                          files: ['cdl-cedilla/cedilla/DEV/config/email.yaml',
+                                  'cdl-cedilla/cedilla/DEV/config/slack_irc.yml']}]
+
+  cedilla_services:
+    repository_uri: 'https://github.com/cdlib/cedilla_services.git'
+    retrieval_command: 'git clone'
+    build_command: 'bundle install'
+    start_command: 'thin -R config.ru start -p 3101 -d'
+
+    pid_location: 'tmp/pids/thin.pid'
+
+    live_target: 'http://localhost:3101'
+    mock_target: 'http://localhost:9101'
+  
+    # List all of the configuration file locations (relative to the project root) 
+    # Rehearsal will swap out all live_targets in the config files with mock_targets
+    # All other http targets will be change to point to the test proxy
+    config_location: '/config'
+    config_replacement: [{dir: '.', files: ['cdl-cedilla/cedilla_services/DEV/config/app.yml']}]
+                 

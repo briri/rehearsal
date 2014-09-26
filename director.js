@@ -21,45 +21,39 @@ var waitUntilDone = setInterval(function(){
       // Get the Actors ready
       console.log('\nHolding auditions.');
       
-      Actor.findAll( {where: {active: true}} ).success(function(cast){
-        
-        stagehand = new Stagehand(cast, function(){
-          
-          // Load plays
-          Play.findAll( {where: {active: true}} ).success(function(plays){
+			stagehand = new Stagehand(function(){
+				
+        // Load plays
+        Play.findAll( {where: {active: true}} ).success(function(plays){
+					
+          plays_count = plays.length;
+  
+          _.forEach(plays, function(play){
+            console.log('\nPLAY: ' + play.description);
+						
+            // Assign a Playwright
+            var writer = new Writer();
     
-            plays_count = plays.length;
-    
-            _.forEach(plays, function(play){
-              console.log('\nPLAY: ' + play.description);
+            // Rehearse the play to make sure all Actor's know their lines
+            play.rehearse(writer, stagehand, function(){
+              // Assign a Critic to review the play
+              var critic = new Critic();
       
-              // Assign a Playwright
-              var writer = new Writer();
-      
-              // Rehearse the play to make sure all Actor's know their lines
-              play.rehearse(writer, function(){
+              // Perform Full Dress Rehearsal for the Critic
+              play.perform(critic, function(){
         
-                // Assign a Critic to review the play
-                var critic = new Critic();
-        
-                // Perform Full Dress Rehearsal for the Critic
-                play.perform(critic, function(){
-          
-                  plays_completed++;
-                });
-      
+                plays_completed++;
               });
-      
-            });
-      
-          }).error(function(err){
-            console.log('Unable to see the play schedule!');
-            console.log(err);
-          });
-        });
-        
-      });
-    
+						});
+					});
+				});
+				
+				/*stagehand.installSet('cedilla_services', false, function(success){
+					console.log('started live service? ' + success);
+				});*/
+				
+			});
+			
       firstTime = false;
       
     });
