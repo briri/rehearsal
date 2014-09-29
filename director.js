@@ -22,6 +22,7 @@ var waitUntilDone = setInterval(function(){
       console.log('\nHolding auditions.');
       
 			stagehand = new Stagehand(function(){
+				var fatal = false;
 				
         // Load plays
         Play.findAll( {where: {active: true}} ).success(function(plays){
@@ -35,23 +36,14 @@ var waitUntilDone = setInterval(function(){
             var writer = new Writer();
     
             // Rehearse the play to make sure all Actor's know their lines
-            play.rehearse(writer, stagehand, function(){
+            play.rehearse(writer, stagehand, function(success){
               // Assign a Critic to review the play
               var critic = new Critic();
-      
-              // Perform Full Dress Rehearsal for the Critic
-              play.perform(critic, function(){
-        
-                plays_completed++;
-              });
+
+							if(success){ plays_completed++; }else{ fatal = true; };
 						});
 					});
 				});
-				
-				/*stagehand.installSet('cedilla_services', false, function(success){
-					console.log('started live service? ' + success);
-				});*/
-				
 			});
 			
       firstTime = false;
@@ -64,7 +56,8 @@ var waitUntilDone = setInterval(function(){
     
     if(stagehand instanceof(Stagehand)) stagehand.cleanup();
   }
-}, 1000);
+
+}, 400);
 
 
 var deleteFolderRecursive = function(path, callback) {
