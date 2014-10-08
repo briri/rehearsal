@@ -1,16 +1,19 @@
 var _ = require('underscore'),
-    fs = require('fs'),
-    Stagehand = require('./lib/stagehand'),
+    fs = require('fs');
+		
+var Stagehand = require('./lib/stagehand'),
     Writer = require('./lib/writer'),
     Critic = require('./lib/critic'),
     Actor = require('./lib/model/actor'),
-    Play = require('./lib/model/play');
+    Play = require('./lib/model/play'),
+		Script = require('./lib/script');
     
 var firstTime = true,
     play_count = 1,
     plays_completed = 0,
-    stagehand = undefined;
-
+    stagehand = undefined,
+		writer = undefined;
+		
 // Wait for all of the plays to complete!
 var waitUntilDone = setInterval(function(){
   
@@ -18,32 +21,40 @@ var waitUntilDone = setInterval(function(){
     // Clear out the old temp directory
     deleteFolderRecursive('./tmp', function(){
       
+      // Assign a Script Writer
+      writer = new Writer();
+			
       // Get the Actors ready
       console.log('\nHolding auditions.');
       
-			stagehand = new Stagehand(function(){
-				var fatal = false;
+			stagehand = new Stagehand(function(success){
+				if(success){
+					var fatal = false;
 				
-        // Load plays
-        Play.findAll( {where: {active: true}} ).success(function(plays){
-					
-          plays_count = plays.length;
-  
-          _.forEach(plays, function(play){
-            console.log('\nPLAY: ' + play.description);
-						
-            // Assign a Playwright
-            var writer = new Writer();
-    
-            // Rehearse the play to make sure all Actor's know their lines
-            play.rehearse(writer, stagehand, function(success){
-              // Assign a Critic to review the play
-              var critic = new Critic();
+					writer.findAllActors(function(actors){
+					//Actor.findAll( {where: {active: true}, order: ['level', 'name']} ).success(function(actors){		
+		        // Load plays
+		        writer.findAllPlays(function(plays){
+			
+		          plays_count = plays.length;
 
-							if(success){ plays_completed++; }else{ fatal = true; };
+		          _.forEach(plays, function(play){
+								var script = new Script(writer, stagehand, play);
+	              
+								// Assign a Critic to review the play
+	              var critic = new Critic();
+								
+								script.rehearse(critic, actors, function(){
+									plays_completed++;
+								});
+									
+							});
 						});
 					});
-				});
+	        
+				}else{
+					console.log('A fatal error prevented the rehearsal from starting!');
+				}
 			});
 			
       firstTime = false;
@@ -54,6 +65,7 @@ var waitUntilDone = setInterval(function(){
   if(plays_completed >= play_count){
     clearInterval(waitUntilDone);
     
+		if(writer instanceof(Writer)) writer.close();
     if(stagehand instanceof(Stagehand)) stagehand.cleanup();
   }
 
