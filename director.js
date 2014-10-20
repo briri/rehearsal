@@ -38,17 +38,21 @@ var waitUntilDone = setInterval(function(){
 			
 		          plays_count = plays.length;
 
-		          _.forEach(plays, function(play){
-								var script = new Script(writer, stagehand, play);
+							// Wait for the servers to startup and come online
+							setTimeout(function(){
+			          _.forEach(plays, function(play){
+									var script = new Script(writer, stagehand, play);
 	              
-								// Assign a Critic to review the play
-	              var critic = new Critic();
+									// Assign a Critic to review the play
+		              var critic = new Critic();
 								
-								script.rehearse(critic, actors, function(){
-									plays_completed++;
+									// Do the FULL STACK test
+									script.fullDressRehearsal(critic, actors, function(){
+										plays_completed++;
+									});
 								});
-									
-							});
+								
+							}, 2000);
 						});
 					});
 	        
