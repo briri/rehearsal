@@ -1,0 +1,35 @@
+{
+  "name": "cedilla_rehearsal",
+  "version": "0.0.1",
+  "description": "A test framework for the cedilla ecosystem",
+  "author": "Brian Riley <brian.riley@ucop.edu>",
+  "contributors": [{
+    "name": "Brian Riley",
+    "email": "brian.riley@ucop.edu"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cdlib/cedilla_rehearsal"
+  },
+  "bugs": {
+    "url": "https://github.com/cdlib/cedilla_rehearsal/issues"
+  },
+  "dependencies": {
+    "socket.io": "latest",
+    "socket.io-client": "latest",
+    "express": "latest",
+		"express-json": "latest",
+    "body-parser": "latest",
+    "method-override": "latest",
+    "js-yaml": "latest",
+		"http": "latest",
+    "underscore": "latest",
+		"mysql": "latest",
+		"ncp": "latest",
+		"node-uuid": "latest"
+  },
+  "preferGlobal": true,
+  "private": true,
+  "license": "BSD-3-Clause"
+}
