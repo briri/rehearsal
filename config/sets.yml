@@ -31,7 +31,7 @@ sets:
 
     # This should match the mock port of the component it will call
     rewrite_lines_for_live: [{from: 'http://localhost:3101', to: 'http://localhost:4101'},
-                             {from: 'http://localhost:3102', to: 'http://localhost:4102'}
+                             {from: 'http://localhost:3102', to: 'http://localhost:4102'},
                              {from: 'http://localhost:8088', to: 'http://localhost:4103'}]
 		rewrite_lines_for_mocking: [{from: 'http://localhost:3101', to: 'http://localhost:5101'},
                                 {from: 'http://localhost:8088', to: 'http://localhost:5103'}]
