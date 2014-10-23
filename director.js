@@ -1,5 +1,7 @@
 var _ = require('underscore'),
-    fs = require('fs');
+    fs = require('fs'),
+		http = require('http'),
+		url = require('url');
 		
 var Stagehand = require('./lib/stagehand'),
     Writer = require('./lib/writer'),
@@ -12,7 +14,8 @@ var firstTime = true,
     play_count = 1,
     plays_completed = 0,
     stagehand = undefined,
-		writer = undefined;
+		writer = undefined,
+		critic = undefined;
 		
 // Wait for all of the plays to complete!
 var waitUntilDone = setInterval(function(){
@@ -21,44 +24,58 @@ var waitUntilDone = setInterval(function(){
     // Clear out the old temp directory
     deleteFolderRecursive('./tmp', function(){
       
-      // Assign a Script Writer
-      writer = new Writer();
-			
       // Get the Actors ready
       console.log('\nHolding auditions.');
       
-			stagehand = new Stagehand(function(success){
-				if(success){
-					var fatal = false;
+			// Assign a Script Writer
+	    writer = new Writer(function(success){
 				
-					writer.findAllActors(function(actors){
-					//Actor.findAll( {where: {active: true}, order: ['level', 'name']} ).success(function(actors){		
-		        // Load plays
-		        writer.findAllPlays(function(plays){
-			
-		          plays_count = plays.length;
+				stagehand = new Stagehand(function(success){
+				
+					if(success){
+						var fatal = false;
+				
+						// Wait for systems to come online
+						console.log('Waiting a moment to give all systems a chance to come online');
+						setTimeout(function(){
+						
+							writer.setStagehand(stagehand);
+						
+							writer.findAllActors(function(actors){
+				        // Load plays
+				        writer.findAllPlays(function(plays){
+									plays_count = plays.length;
 
-							// Wait for the servers to startup and come online
-							setTimeout(function(){
-			          _.forEach(plays, function(play){
-									var script = new Script(writer, stagehand, play);
-	              
-									// Assign a Critic to review the play
-		              var critic = new Critic();
-								
-									// Do the FULL STACK test
-									script.fullDressRehearsal(critic, actors, function(){
-										plays_completed++;
+									// Wait for the servers to startup and come online
+				          _.forEach(plays, function(play){
+										// Assign a Critic to review the play
+			              var critic = new Critic(play.getId());
+										
+										var script = new Script(writer, stagehand, play);
+      
+// THIS IS COMMENTED OUT SO WE CAN RUN AGAINST LIVE FOR THIS PHASE!
+										//script.dressRehearsal(critic, actors, function(){
+			
+										script.audition(critic, actors, function(){
+											
+											critic.writeReview(function(res){
+												console.log(res);
+												plays_completed++;
+											});
+										});
 									});
+				
 								});
-								
-							}, 2000);
-						});
-					});
-	        
-				}else{
-					console.log('A fatal error prevented the rehearsal from starting!');
-				}
+							});
+				
+						}, 4000);
+				
+					}else{
+						console.log('A fatal error prevented the rehearsal from starting!');
+					}
+						
+				});
+				
 			});
 			
       firstTime = false;
@@ -67,6 +84,8 @@ var waitUntilDone = setInterval(function(){
   }
 
   if(plays_completed >= play_count){
+console.log('tic waitUntilDone');
+		
     clearInterval(waitUntilDone);
     
 		if(writer instanceof(Writer)) writer.close();
