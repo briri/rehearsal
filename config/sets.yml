@@ -24,7 +24,7 @@ sets:
     config_replacement: [{dir: '.', 
                           files: ['cdl-cedilla/cedilla/DEV/config/application.yaml',
                                   'cdl-cedilla/cedilla/DEV/config/rules.yaml',
-                                  'cdl-cedilla/cedilla/DEV/config/services.yaml']},
+                                  'cdl-cedilla/cedilla_rehearsal/cedilla/services.yaml']},
                          {dir: './notifiers', 
                           files: ['cdl-cedilla/cedilla/DEV/config/email.yaml',
                                   'cdl-cedilla/cedilla/DEV/config/slack_irc.yaml']}]
